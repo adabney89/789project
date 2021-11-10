@@ -8,3 +8,5 @@ close all
 % Abbas Alili, Andrew Abney, Krysten Lambeth
 % Fall 2021
 %%%%
+
+%Andrew is dumb
