@@ -9,4 +9,3 @@ close all
 % Fall 2021
 %%%%
 
-%Andrew is dumb
