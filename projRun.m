@@ -77,49 +77,72 @@ for i = 1:n
 end
 legend
 
+%%%%
+% Objective Function
+% Based on 12, which assumes you perscribes a final time for the first car
+% and all other cars follow
+%%%%
 function J = objF(u)
 J = sum(u.^2);
 end
 
+%%%%
+% Constraint Functions
+% This can probably be reformulated into a quadprog, but the lifted
+% representation is slightly different then what we derived in HW 1. 
+%%%%
 function [g,h] = cFun(u,x0,T)
+%Evaluate the state dynamics
 x = evalDyn(u,x0,T);
+% Find the number of position states
 m = numel(x(:,1))/3;
+% Find the number of timesteps (the function doesn't know
 N = numel(u)/m;
+% Change u from a vector to an array
 u = reshape(u,m,N);
-S = 30;
-L = 400;
-delta = 5;
+% Problem constraints
+S = 30; %Lateral merge distance required/merge zone length
+L = 400; %Area before the control zone
+delta = 5; %Safe travel distance
+
+%Indices for equality (q) and inequality (qq) constraints
 q = 1;
 qq = 1;
-for i = 1:m
-    k = find(x(i,:)>L,1);
-    if i > 1
-        if isempty(k)
+for i = 1:m %Loop through the number of cars
+    k = find(x(i,:)>L,1); %Find where each car enters the control zone
+    if i > 1 %For all cars past the first car
+        if isempty(k) 
+            %If it never enters the control zone assign a dummy
+            %constraint. MATLAB needs the number of constraints to be
+            %constant or else FMINCON blows up
             h(q) = 0;
             k = 1;
         elseif x(2*m+i,k) ~= x(2*m+i-1,k)
+            %If the cars are in different lanes, must be separated by S
+            %once in the merging zone
             h(q) = x(i,k)-x(i-1,k)+S;
         else
-            x(i,k)-x(i-1,k)+delta;
+            %If the cars are in the same lane, must be separated by delta
             h(q) = x(i,k)-x(i-1,k)+delta;
         end
         q = q+1;
     else
+        % Specify t_f for the first car (when it has to be clear of the
+        % merge zone
         h(q) = x(1,20/T)-430;
         q = q+1;
     end
+    %Once the car is in the merge zone, its velocity must be constant, and
+    %equal to its initial velocity
     q = q+1;
     j = N-k-1;
-%     k
-%          numel(q:q+j)
-%          numel(u((i-1)*N+k:i*N-1))
-%     numel(q+j+1:q+j+k)
     h(q:q+j) = x(i+m,k:N-1)-x(i+m,1);
     h(q+j+1:q+j+k) = 0;
     
     q = q+N+1;
 end
-
+% No inequality constraints. We could set some velocity constraints if we
+% wanted to
 g = [];
 end
 
