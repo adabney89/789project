@@ -12,15 +12,15 @@ close all
 %%%%
 % Initilize Problem
 %%%%
-n = 4; %Number of vehicles
+n = 10; %Number of vehicles
 v0 = 13.4; %Initial Velocity m/s
-x0 = [zeros(n,1); v0*ones(n,1); 1; 2; 1; 2]; %Initial state
+x0 = [-sort(-rand(n,1)*50); v0*ones(n,1); round(rand(n,1))]; %Initial state
 
 %%%%
 % Simulation Parameters
 %%%%
 
-T = 0.2; %Timestep
+T = 0.25; %Timestep
 simTime = 50; %Simulation Time
 N = simTime/T; %Number of steps
 
@@ -28,7 +28,7 @@ N = simTime/T; %Number of steps
 % Setup fmincon
 %%%%
 options = optimoptions('fmincon','Display','iter','Algorithm','sqp','MaxFunctionEvaluations',1e6,'ConstraintTolerance',1e-6,'StepTolerance',1e-6);
-uStar = fmincon(@(u)objF(u),2*ones(n*N,1),[],[],[],[],[],[],@(u)cFun(u,x0,T),options);
+uStar = fmincon(@(u)objF(u),2*ones(n*N,1),[],[],[],[],-3,3,@(u)cFun(u,x0,T),options);
 %% Plotting
 
 %%%%
@@ -48,24 +48,27 @@ h3 = find(xStar(3,:)>430,1);
 %%%%
 figure('Position',[100 100 400 150]);
 hold on
-plot(T*(1:N+1),xStar(1,:))
-plot(T*(1:N+1),xStar(2,:))
-plot(T*(1:N+1),xStar(3,:))
-plot(T*(1:N+1),xStar(4,:))
-plot([T*h1 T*h1],[400 430],'k')
-plot([T*h2 T*h2],[400 430],'k')
-plot([T*h3 T*h3],[400 430],'k')
+for i = 1:n
+    if xStar(2*n+i,1) == 0
+        plot(xStar(i,:),'r')
+    else
+        plot(xStar(i,:),'k--')
+    end
+end
 ylim([400 430])
 
 %%%%
 % Plot Velocity
 %%%%
-figure('Position',[100 100 400 150]);
+figure('Position',[100 100 800 350]);
 hold on
-plot(T*(1:N+1),xStar(5,:))
-plot(T*(1:N+1),xStar(6,:))
-plot(T*(1:N+1),xStar(7,:))
-plot(T*(1:N+1),xStar(8,:))
+for i = 1:n
+    if xStar(2*n+i,1) == 0
+        plot(T*(1:N+1),xStar(n+i,:),'r')
+    else
+        plot(T*(1:N+1),xStar(n+i,:),'--k')
+    end
+end
 
 %%%%
 % Plot Control Signals
