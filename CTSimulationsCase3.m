@@ -15,9 +15,9 @@ x0 = -sort(rand(cars,1)*100); % random starting positions, in order
 road = round(rand(cars,1)); % randomly assign to roads
 for j = 1:cars
     if road(j) == 1
-        x{j}(:,1) = [x0(j);v0(2)]; % structure of states
+        x{j}(:,1) = [x0(j);v0(1)]; % structure of states (main road)
     else
-        x{j}(:,1) = [x0(j);v0(1)]; % structure of states
+        x{j}(:,1) = [x0(j);v0(2)]; % structure of states (side road)
     end
 end
 
@@ -50,7 +50,7 @@ end
 for j = 1:cars
     for i = 1:length(tvec)-1
         t = tvec(i+1);
-        if ceil(x{j}(1,i)) < L+S && x{j}(1,i) >= 0 % if in ctrl/merg zones
+        if ceil(x{j}(1,i)) < L && x{j}(1,i) >= 0 % if in ctrl/merg zones
             x{j}(1,i+1) = b{j}(1,i)*t^3/6 + b{j}(2,i)*t^2/2 + b{j}(3,i)*t + b{j}(4,i); % position
             x{j}(2,i+1) = b{j}(1,i)*t^2/2 + b{j}(2,i)*t + b{j}(3,i); % veloc
             u{j}(i) = b{j}(1,i)*t + b{j}(2,i);
