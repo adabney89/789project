@@ -1,13 +1,5 @@
 clear
-close all
 
-q0 = 0.1569;
-q1 = 2.45*10^-2;
-q2 = -7.415*10^-4;
-q3 = 5.975*10^-5;
-r0 = 0.07224;
-r1 = 9.681*10^-2;
-r2 = 1.075*10^-3;
 L = 400;
 S = 30;
 v0 = 13.4;
@@ -51,7 +43,7 @@ end
 for i=1:4
     for ti=0:length(tvec)-1
         t=tvec(ti+1);
-        if ceil(q(1,i,ti+1)) < L+S && q(1,i,ti+1) >= 0 % if in ctrl/merg zones
+        if ceil(q(1,i,ti+1)) < L && q(1,i,ti+1) >= 0 % if in ctrl/merg zones
             q(1,i,ti+2) = b(1,i)*t^3/6 + b(2,i)*t^2/2 + b(3,i)*t + b(4,i); % position
             q(2,i,ti+2) = b(1,i)*t^2/2 + b(2,i)*t + b(3,i); % veloc
             u(i,ti+1) = b(1,i)*t + b(2,i);
@@ -75,25 +67,25 @@ for i=1:length(tvec)
     v(:,i) = q(2,:,i);
 end
 
-close all
+% close all
+
+% figure(1)
+% plot(tvec,p(1,:),'r--')
+% hold all
+% plot(tvec,p(2,:),'b')
+% plot(tvec,p(3,:),'r--')
+% plot(tvec,p(4,:),'b')
+% ylim([0 450])
+% 
+% figure(2)
+% plot(tvec,v(1,:),'r--')
+% hold all
+% plot(tvec,v(2,:),'b')
+% plot(tvec,v(3,:),'r--')
+% plot(tvec,v(4,:),'b')
+% ylim([0 25])
 
 figure(1)
-plot(tvec,p(1,:),'r--')
-hold all
-plot(tvec,p(2,:),'b')
-plot(tvec,p(3,:),'r--')
-plot(tvec,p(4,:),'b')
-ylim([0 450])
-
-figure(2)
-plot(tvec,v(1,:),'r--')
-hold all
-plot(tvec,v(2,:),'b')
-plot(tvec,v(3,:),'r--')
-plot(tvec,v(4,:),'b')
-ylim([0 25])
-
-figure(3)
 plot(tvec,u(1,:),'r--')
 hold all
 plot(tvec,u(2,:),'b')
@@ -103,6 +95,14 @@ title('Control Input')
 ylim([-2.5 2.5])
 
 %% Get Fuel Consumption
+
+q0 = 0.1569;
+q1 = 2.45*10^-2;
+q2 = -7.415*10^-4;
+q3 = 5.975*10^-5;
+r0 = 0.07224;
+r1 = 9.681*10^-2;
+r2 = 1.075*10^-3;
 
 fcruise = zeros(n,length(u)); % fuel consumed at constant speed
 facc = zeros(n,length(t)); % fuel consumed due to acc
