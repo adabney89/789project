@@ -112,3 +112,28 @@ end
 xlabel 'Time [s]'
 ylabel 'u^* [ms^{-2}]'
 title('Optimal Controls')
+
+%% Get Fuel Consumption
+
+q0 = 0.1569;
+q1 = 2.45*10^-2;
+q2 = -7.415*10^-4;
+q3 = 5.975*10^-5;
+r0 = 0.07224;
+r1 = 9.681*10^-2;
+r2 = 1.075*10^-3;
+
+fcruise = zeros(cars,length(u{j})); % fuel consumed at constant speed
+facc = zeros(cars,length(t)); % fuel consumed due to acc
+fv = zeros(cars,length(t)); % total fuel consumed
+cost = zeros(cars,1); % total cost
+
+for j=1:cars
+    for i=1:length(u)
+        ti = tvec(i);
+        fcruise(j,i) = q0 + q1*x{j}(2,i) + q2*x{j}(2,i)^2 + q3*x{j}(2,i)^3;
+        facc(j,i) = u{j}(i)*(r0 + r1*x{j}(2,i) + r2*x{j}(2,i)^2);
+        fv(j,i) = fcruise(j,i) + facc(j,i);
+    end
+    cost(j) = sum(fv(j,:));
+end
