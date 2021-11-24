@@ -11,11 +11,18 @@ tvec = 0:dt:100; % time array
 
 t0 = [10 10 12.5 12.5]'; % time cars enter control zone [s]
 v0 = 13.4; % speed before entering control zone [m/s]
-x0 = -sort(rand(cars,1)*100); % random starting positions, in order
+% x0 = -sort(rand(cars,1)*100); % random starting positions, in order
+x0 = [-3.5712, -9.7540, -12.6987, -14.1886, -15.7613, -17.1187, -27.8498,...
+    -39.2227, -42.1761, -48.5376, -54.6882, -63.2359, -65.5478, -65.5741,...
+    -67.8735, -74.3132, -75.7740, -79.2207, -80.0280, -81.4724, -84.9129,...
+    -90.5792, -91.3376, -91.5736, -93.3993, -95.7167, -95.7507, -95.9492,...
+    -96.4889, -97.0593].'; % initial positions
 for j = 1:cars
     x{j}(:,1) = [x0(j);13.4]; % structure of states
 end
-road = round(rand(cars,1)); % randomly assign to roads
+% road = round(rand(cars,1)); % randomly assign to roads
+road = [1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0 1, 1, 0, 0, 0, 1, 1, 1, 0 1,...
+    1, 0, 0, 0, 1, 0, 1, 0].';
 
 pf = L + S; % positions at final time
 vf = v0; % velocities at final time
@@ -78,7 +85,8 @@ end
 xlabel 'Time [s]'
 ylabel 'p^* [m]'
 ylim([0 430])
-title('Optimal Positions')
+title('Case 2: Optimal Positions')
+legend('Main Road','Adjoining Road')
 
 figure % Velocities
 hold all
@@ -93,7 +101,8 @@ end
 xlabel 'Time [s]'
 ylabel 'v^* [m/s]'
 ylim([0 30])
-title('Optimal Velocities')
+title('Case 2: Optimal Velocities')
+legend('Main Road','Adjoining Road')
 
 figure % Controls
 hold all
@@ -107,7 +116,8 @@ for j = 1:cars
 end
 xlabel 'Time [s]'
 ylabel 'u^* [ms^{-2}]'
-title('Optimal Controls')
+title('Case 2: Optimal Controls')
+legend('Main Road','Adjoining Road')
 
 %% Get Fuel Consumption
 

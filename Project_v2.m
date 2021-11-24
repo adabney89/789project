@@ -1,98 +1,117 @@
 clear
 
-L = 400;
-S = 30;
-v0 = 13.4;
-delta = 3;
-t0 = [10 10 12.5 12.5];
-n = length(t0);
-
-tf = zeros(n,1);
-% tf(1) = t0(1)+(L+S)/v0;
-tf(1) = t0(1)+22;
-
-for i = 2:4
-    tf(i) = tf(i-1) + S/v0;
-end
-
-%%
-
-pf = L+S;
-vf = v0;
-q_0 = zeros(4,4);
-q_0(:,1) = [-t0(1)*v0 13.4 pf vf]';
-q_0(:,2) = [-t0(2)*v0 13.4 pf vf]';
-q_0(:,3) = [-t0(3)*13.4 13.4 pf vf]';
-q_0(:,4) = [-t0(4)*13.4 13.4 pf vf]';
-b = zeros(4,n);
-for i = 1:4
-    T = [0 0 0 1; 0 0 1 0;...
-        tf(i)^3/6 tf(i)^2/2 tf(i) 1;...
-        tf(i)^2/2 tf(i) 1 0];
-    b(:,i) = T\q_0(:,i);
-end
-
-dt = 0.1;
+L = 400; % length of control zone
+S = 30; % length of merging zone
+v0 = 13.4; % initial speed [m/s]
+delta = 3; % minimum safe following distance [m]
+t0 = [10 10 12.5 12.5]; % initial times [s]
+cars = length(t0); % # cars
+road = [1 0 1 0].'; % roads each car is on (1 = main road)
+dt = 0.25; % time step [s]
 tvec = 0:dt:45;
-u = zeros(n,length(tvec)-1);
-q = zeros(4,n,length(tvec));
-for i=1:4
-    q(:,i,1)=q_0(:,i);
+
+for j = 1:cars
+    x0(j) = -t0(j)*v0; % initial positions [m]
+    x{j}(:,1) = [x0(j);13.4]; % structure of states
 end
 
-for i=1:4
-    for ti=0:length(tvec)-1
-        t=tvec(ti+1);
-        if ceil(q(1,i,ti+1)) < L && q(1,i,ti+1) >= 0 % if in ctrl/merg zones
-            q(1,i,ti+2) = b(1,i)*t^3/6 + b(2,i)*t^2/2 + b(3,i)*t + b(4,i); % position
-            q(2,i,ti+2) = b(1,i)*t^2/2 + b(2,i)*t + b(3,i); % veloc
-            u(i,ti+1) = b(1,i)*t + b(2,i);
+for j = 1:cars
+    if j == 1
+        tf(j) = 22+t0(j); % Car 1 must pass through in time seconds
+    else
+        if road(j) == road(j-1) % if on same road as previous car
+            tf(j) = tf(j-1) + delta/x{j}(2); % final time (rear collision con)
         else
-            u(i,ti+1) = 0;
-            q(1,i,ti+2) = q(1,i,ti+1)+dt*q(2,i,ti+1);
-            q(2,i,ti+2) = v0;
+            tf(j) = tf(j-1) + S/x{j}(2); % final time (lat collision con)
         end
-        q(3,i,ti+2) = pf;
-        q(4,i,ti+2) = v0;
-        T = [t^3/6 t^2/2 t 1; 
-               t^2/2 t 1 0; 
-               tf(i)^3/6 tf(i)^2/2 tf(i) 1;
-               tf(i)^2/2 tf(i) 1 0];
-        b(:,i) = T\q(:,i,ti+2);
     end
 end
 
-for i=1:length(tvec)
-    p(:,i) = q(1,:,i);
-    v(:,i) = q(2,:,i);
+pf = L+S; % final position [m]
+vf = v0; % final velocity [m/s]
+
+%% Initialize
+
+for j = 1:cars
+    T = [0 0 0 1; 0 0 1 0;...
+        tf(j)^3/6 tf(j)^2/2 tf(j) 1;...
+        tf(j)^2/2 tf(j) 1 0];
+    b{j}(:,1) = T\[x{j}(:,1); pf; vf];
 end
 
-% close all
+%% Simulate
 
-% figure(1)
-% plot(tvec,p(1,:),'r--')
-% hold all
-% plot(tvec,p(2,:),'b')
-% plot(tvec,p(3,:),'r--')
-% plot(tvec,p(4,:),'b')
-% ylim([0 450])
-% 
-% figure(2)
-% plot(tvec,v(1,:),'r--')
-% hold all
-% plot(tvec,v(2,:),'b')
-% plot(tvec,v(3,:),'r--')
-% plot(tvec,v(4,:),'b')
-% ylim([0 25])
+for j = 1:cars
+    for i = 1:length(tvec)-1
+        t = tvec(i+1);
+        if ceil(x{j}(1,i)) < L && x{j}(1,i) >= 0 % if in ctrl zone
+            x{j}(1,i+1) = b{j}(1,i)*t^3/6 + b{j}(2,i)*t^2/2 + b{j}(3,i)*t + b{j}(4,i); % position
+            x{j}(2,i+1) = b{j}(1,i)*t^2/2 + b{j}(2,i)*t + b{j}(3,i); % veloc
+            u{j}(i) = b{j}(1,i)*t + b{j}(2,i);
+        else
+            u{j}(i) = 0;
+            x{j}(1,i+1) = x{j}(1,i) + dt*x{j}(2,i);
+            x{j}(2,i+1) = x{j}(2,i);
+        end
+        T = [t^3/6 t^2/2 t 1; ...
+            t^2/2 t 1 0; ...
+            tf(j)^3/6 tf(j)^2/2 tf(j) 1; ...
+            tf(j)^2/2 tf(j) 1 0];
+        b{j}(:,i+1) = T\[x{j}(:,i+1); pf; vf];
+    end
+end
 
-figure(1)
-plot(tvec,u(1,:),'r--')
+%% Plots
+
+close all
+
+figure(1) % Positions
 hold all
-plot(tvec,u(2,:),'b')
-plot(tvec,u(3,:),'r--')
-plot(tvec,u(4,:),'b')
-title('Control Input')
+for j = 1:cars
+    if road(j) == 1
+        col = '-k';
+    else
+        col = '--r';
+    end
+    plot(tvec,x{j}(1,:),col)
+end
+ylim([0 450])
+legend('Main Road','Adjoining Road')
+xlabel('Time [s]')
+ylabel('p^* [m]')
+title('Case 1: Optimal Positions')
+
+figure(2)
+hold all
+for j = 1:cars
+    if road(j) == 1
+        col = '-k';
+    else
+        col = '--r';
+    end
+    plot(tvec,x{j}(2,:),col)
+end
+ylim([0 25])
+legend('Main Road','Adjoining Road')
+xlabel('Time [s]')
+ylabel('v^* [m/s]')
+title('Case 1: Optimal Velocities')
+
+figure(3) % Controls
+hold all
+for j = 1:cars
+    if road(j) == 1
+        col = '-k';
+    else
+        col = '--r';
+    end
+    plot(tvec(1:length(u{j})),u{j},col)
+end
+title('Case 1: Optimal Controls')
+legend('Main Road','Adjoining Road')
 ylim([-2.5 2.5])
+ylabel 'u^* [ms^{-2}]'
+xlabel 'Time [s]'
 
 %% Get Fuel Consumption
 
@@ -104,16 +123,16 @@ r0 = 0.07224;
 r1 = 9.681*10^-2;
 r2 = 1.075*10^-3;
 
-fcruise = zeros(n,length(u)); % fuel consumed at constant speed
-facc = zeros(n,length(t)); % fuel consumed due to acc
-fv = zeros(n,length(t)); % total fuel consumed
-cost = zeros(n,1); % total cost
+fcruise = zeros(cars,length(u{j})); % fuel consumed at constant speed
+facc = zeros(cars,length(t)); % fuel consumed due to acc
+fv = zeros(cars,length(t)); % total fuel consumed
+cost = zeros(cars,1); % total cost
 
-for j=1:n
+for j=1:cars
     for i=1:length(u)
         ti = tvec(i);
-        fcruise(j,i) = q0 + q1*v(j,i) + q2*v(j,i)^2 + q3*v(j,i)^3;
-        facc(j,i) = u(j,i)*(r0 + r1*v(j,i) + r2*v(j,i)^2);
+        fcruise(j,i) = q0 + q1*x{j}(2,i) + q2*x{j}(2,i)^2 + q3*x{j}(2,i)^3;
+        facc(j,i) = u{j}(i)*(r0 + r1*x{j}(2,i) + r2*x{j}(2,i)^2);
         fv(j,i) = fcruise(j,i) + facc(j,i);
     end
     cost(j) = sum(fv(j,:));
