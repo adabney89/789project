@@ -12,7 +12,7 @@ close all
 %%%%
 % Initilize Problem
 %%%%
-n = 10; %Number of vehicles
+n = 4; %Number of vehicles
 v0 = 13.4; %Initial Velocity m/s
 x0 = [-sort(-rand(n,1)*50); v0*ones(n,1); round(rand(n,1))]; %Initial state
 
@@ -55,7 +55,7 @@ for i = 1:n
         plot(xStar(i,:),'k--')
     end
 end
-ylim([400 430])
+% ylim([400 430])
 
 %%%%
 % Plot Velocity
@@ -76,7 +76,7 @@ end
 figure
 hold on
 for i = 1:n
-    stairs(T*(1:N),uStar((i-1)*N+1:N*i))
+    stairs(T*(1:N),uStar(i:4:end))
 end
 legend
 
@@ -86,7 +86,7 @@ legend
 % and all other cars follow
 %%%%
 function J = objF(u)
-J = sum(u.^2);
+J = sum(u~=0);
 end
 
 %%%%
@@ -102,7 +102,6 @@ m = numel(x(:,1))/3;
 % Find the number of timesteps (the function doesn't know
 N = numel(u)/m;
 % Change u from a vector to an array
-u = reshape(u,m,N);
 % Problem constraints
 S = 30; %Lateral merge distance required/merge zone length
 L = 400; %Area before the control zone
@@ -132,21 +131,24 @@ for i = 1:m %Loop through the number of cars
     else
         % Specify t_f for the first car (when it has to be clear of the
         % merge zone
-        h(q) = x(1,20/T)-430;
-        q = q+1;
+%         h(q) = x(1,20/T)-430;
+%         q = q+1;
     end
     %Once the car is in the merge zone, its velocity must be constant, and
     %equal to its initial velocity
     q = q+1;
     j = N-k-1;
-    h(q:q+j) = x(i+m,k:N-1)-x(i+m,1);
-    h(q+j+1:q+j+k) = 0;
-    
+    qq+N;
+    numel(1:N);
+    g(qq:qq+N) = x(i+m,1:end)-33;
+    h(q:q+j) = u(i+m*k:m:end);
+    h(q+j+1:q+j+k) = 0;  
     q = q+N+1;
+    qq = qq+j;
 end
 % No inequality constraints. We could set some velocity constraints if we
 % wanted to
-g = [];
+% g = [];
 end
 
 

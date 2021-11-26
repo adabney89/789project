@@ -68,7 +68,7 @@ delta = 5
 for j = 1:cars
     indStart = ceil(-x{j}(1)/(T*x{j}(2)));   
     if j == 1
-        time = 20 % Car 1 must pass through in time seconds
+        time = 15 % Car 1 must pass through in time seconds
     else
         if road(j) == road(j-1) 
             time = delta/x{j}(2);
@@ -84,12 +84,18 @@ for j = 1:cars
 A1 = H(1+(n*ind),:);
 A1 = [A1; H(2:2:2+(n*indStart),:)];
 A1 = [A1; H(2+(n*ind):2:end,:)];
+A2 = H(2:2:end,:);
+A2 = [A2;-H(2:2:end,:)];
 B1 = (aBar(1+(n*ind),:)*x{j})-400;
+% B1 = [B1; aBar(2:2:2+(n*indStart),:)*x{j}-x{j}(2)];
+% B1 = [B1; aBar(2+(n*ind):2:end,:)*x{j}-x{j}(2)];
 B1 = [B1; aBar(2:2:2+(n*indStart),:)*x{j}-x{j}(2)];
-B1 = [B1; aBar(2+(n*ind):2:end,:)*x{j}-x{j}(2)];
+B1 = [B1; aBar(2+(n*ind):2:end,:)*x{j}-33];
+B2 = aBar(2:2:end,:)*x{j}-8;
+B2 = [B2; -aBar(2:2:end,:)*x{j}+35];
 
 
-[uStar{j},jStar] = quadprog(2*qBar,rBar,[],[],A1,-B1);
+[uStar{j},jStar] = quadprog(2*qBar,rBar,-A2,B2,A1,-B1,-3*ones(N,1),3*ones(N,1));
 xStar{j} = H*uStar{j}+aBar*x{j};
 end
 

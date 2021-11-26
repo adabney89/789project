@@ -1,15 +1,15 @@
 %% Parameters
 
-clear; close all; clc
+ clear;% close all; clc
 
 L = 400; % control zone length [m]
 S = 30; % merging zone length [m]
 delta = 5; % minimum safe following distance [m]
 cars = 30; % # cars
-dt = 0.25; % time step [s]
-tvec = 0:dt:100; % time array
+dt = 0.005; % time step [s]
+tvec = 0:dt:60; % time array
 
-v0 = [13.4;11.2]; % speed before entering control zone [m/s]
+v0 = [13.4;13.4]; % speed before entering control zone [m/s]
 % x0 = -sort(rand(cars,1)*100); % random starting positions, in order
 x0 = [-3.5712, -9.7540, -12.6987, -14.1886, -15.7613, -17.1187, -27.8498,...
     -39.2227, -42.1761, -48.5376, -54.6882, -63.2359, -65.5478, -65.5741,...
@@ -21,9 +21,9 @@ road = [1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0 1, 1, 0, 0, 0, 1, 1, 1, 0 1,...
     1, 0, 0, 0, 1, 0, 1, 0].';
 for j = 1:cars
     if road(j) == 1
-        x{j}(:,1) = [x0(j);v0(1)]; % structure of states (main road)
+        xc{j}(:,1) = [x0(j);v0(1)]; % structure of states (main road)
     else
-        x{j}(:,1) = [x0(j);v0(2)]; % structure of states (side road)
+        xc{j}(:,1) = [x0(j);v0(2)]; % structure of states (side road)
     end
 end
 
@@ -35,9 +35,9 @@ for j = 1:cars
         tf(j) = 20; % Car 1 must pass through in time seconds
     else
         if road(j) == road(j-1) % if on same road as previous car
-            tf(j) = tf(j-1) + delta/x{j}(2); % final time (rear collision con)
+            tf(j) = tf(j-1) + delta/13.4; % final time (rear collision con)
         else
-            tf(j) = tf(j-1) + S/x{j}(2); % final time (lat collision con)
+            tf(j) = tf(j-1) + S/13.4; % final time (lat collision con)
         end
     end
 end
@@ -48,7 +48,7 @@ for j = 1:cars
     T = [0 0 0 1; 0 0 1 0;...
         tf(j)^3/6 tf(j)^2/2 tf(j) 1;...
         tf(j)^2/2 tf(j) 1 0];
-    b{j}(:,1) = T\[x{j}(:,1); pf; vf];
+    b{j}(:,1) = T\[xc{j}(:,1); pf; vf];
 end
 
 %% Simulate
@@ -56,71 +56,147 @@ end
 for j = 1:cars
     for i = 1:length(tvec)-1
         t = tvec(i+1);
-        if ceil(x{j}(1,i)) < L && x{j}(1,i) >= 0 % if in ctrl/merg zones
-            x{j}(1,i+1) = b{j}(1,i)*t^3/6 + b{j}(2,i)*t^2/2 + b{j}(3,i)*t + b{j}(4,i); % position
-            x{j}(2,i+1) = b{j}(1,i)*t^2/2 + b{j}(2,i)*t + b{j}(3,i); % veloc
+        if ceil(xc{j}(1,i)) <= L+S && xc{j}(1,i) >= 0 % if in ctrl/merg zones
+            xc{j}(1,i+1) = b{j}(1,i)*t^3/6 + b{j}(2,i)*t^2/2 + b{j}(3,i)*t + b{j}(4,i); % position
+            xc{j}(2,i+1) = b{j}(1,i)*t^2/2 + b{j}(2,i)*t + b{j}(3,i); % veloc
             u{j}(i) = b{j}(1,i)*t + b{j}(2,i);
         else
             u{j}(i) = 0;
-            x{j}(1,i+1) = x{j}(1,i) + dt*x{j}(2,i);
-            x{j}(2,i+1) = x{j}(2,i);
+            xc{j}(1,i+1) = xc{j}(1,i) + dt*xc{j}(2,i);
+            xc{j}(2,i+1) = xc{j}(2,i);
         end
         T = [t^3/6 t^2/2 t 1; ...
             t^2/2 t 1 0; ...
             tf(j)^3/6 tf(j)^2/2 tf(j) 1; ...
             tf(j)^2/2 tf(j) 1 0];
-        b{j}(:,i+1) = T\[x{j}(:,i+1); pf; vf];
+        b{j}(:,i+1) = T\[xc{j}(:,i+1); pf; vf];
     end
 end
 
 %% Plot
 
-figure % Positions
+nexttile(1)
 hold on
+q = 1;
+qq = 1;
 for j = 1:cars
     if road(j) == 1
         col = '-k';
+        legEnt = 'Main Road - Continuous Time';
+        if q == 1
+            vis = 'On';
+            q = q+1;
+        else
+            vis = 'off';
+        end
     else
-        col = '--r';
+        col = '-r';
+        legEnt = 'Adjoining Road - Continuous Time';
+        if qq == 1
+            vis = 'On';
+            qq = qq+1;
+        else
+            vis = 'off';
+        end
     end
-    plot(tvec,x{j}(1,:),col)
+    plot(tvec,xc{j}(1,:),col,'DisplayName',legEnt,'HandleVisibility',vis)
 end
-xlabel('Time [s]')
-ylabel ('p^* [m]')
+% xlabel 'Time [s]'
+% ylabel 'p^* [m]'
 ylim([0 430])
-title('Case 3: Optimal Positions')
-legend('Main Road','Adjoining Road')
+title('Case 2')
+legend('Location','southeast')
 
-figure % Velocities
+% nexttile(2)% Positions
+% hold on
+% q = 1;
+% qq = 1;
+% for j = 1:cars
+%     if road(j) == 1
+%         col = '-k';
+%         legEnt = 'Main Road - Continuous Time';
+%         if q == 1
+%             vis = 'On';
+%             q = q+1;
+%         else
+%             vis = 'off';
+%         end
+%     else
+%         col = '-r';
+%         legEnt = 'Adjoining Road - Continuous Time';
+%         if qq == 1
+%             vis = 'On';
+%             qq = qq+1;
+%         else
+%             vis = 'off';
+%         end
+%     end
+%     plot(tvec,xc{j}(1,:),col,'DisplayName',legEnt,'HandleVisibility',vis)
+% end
+% % xlabel 'Time [s]'
+% % ylabel 'p^* [m]'
+% ylim([400 430])
+% title('Case 2')
+% legend
+
+nexttile(2) % Velocities
 hold all
+q = 1
+qq = 1
 for j = 1:cars
     if road(j) == 1
         col = '-k';
+        legEnt = 'Main Road - Continuous Time';
+        if q == 1
+            vis = 'On';
+            q = q+1;
+        else
+            vis = 'off';
+        end
     else
-        col = '--r';
+        col = '-r';
+        legEnt = 'Adjoining Road - Continuous Time';
+        if qq == 1
+            vis = 'On';
+            qq = qq+1;
+        else
+            vis = 'off';
+        end
     end
-    plot(tvec,x{j}(2,:),col)
+    plot(tvec,xc{j}(2,:),col,'DisplayName',legEnt,'HandleVisibility',vis)
 end
-xlabel('Time [s]')
-ylabel('v^* [m/s]')
+% xlabel 'Time [s]'
+% ylabel 'v^* [m/s]'
 ylim([0 30])
-title('Case 3: Optimal Velocities')
-legend('Main Road','Adjoining Road')
+title('Case 2')
+% legend
 
-figure % Controls
+nexttile(3) % Controls
 hold all
+q = 1
+qq = 1
 for j = 1:cars
-    if road(j) == 1 % main road
+        if road(j) == 1
         col = '-k';
+        legEnt = 'Main Road - Continuous Time';
+        if q == 1
+            vis = 'On';
+            q = q+1;
+        else
+            vis = 'off';
+        end
     else
-        col = '--r';
+        col = '-r';
+        legEnt = 'Adjoining Road - Continuous Time';
+        if qq == 1
+            vis = 'On';
+            qq = qq+1;
+        else
+            vis = 'off';
+        end
     end
-    plot(tvec(1:length(u{j})),u{j},col)
+    plot(tvec(1:length(u{j})),u{j},col,'DisplayName',legEnt,'HandleVisibility',vis)
 end
-xlabel 'Time [s]'
-ylabel 'u^* [ms^{-2}]'
-title('Case 3: Optimal Controls')
-legend('Main Road','Adjoining Road')
 
 %% Get Fuel Consumption
 
@@ -140,8 +216,8 @@ cost = zeros(cars,1); % total cost
 for j=1:cars
     for i=1:length(u)
         ti = tvec(i);
-        fcruise(j,i) = q0 + q1*x{j}(2,i) + q2*x{j}(2,i)^2 + q3*x{j}(2,i)^3;
-        facc(j,i) = u{j}(i)*(r0 + r1*x{j}(2,i) + r2*x{j}(2,i)^2);
+        fcruise(j,i) = q0 + q1*xc{j}(2,i) + q2*xc{j}(2,i)^2 + q3*xc{j}(2,i)^3;
+        facc(j,i) = u{j}(i)*(r0 + r1*xc{j}(2,i) + r2*xc{j}(2,i)^2);
         fv(j,i) = fcruise(j,i) + facc(j,i);
     end
     cost(j) = sum(fv(j,:));
