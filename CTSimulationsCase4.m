@@ -17,7 +17,9 @@ x0 = -sort(rand(cars,1)*100); % random starting positions, in order
 for j = 1:cars
     x{j}(:,1) = [x0(j);v0]; % structure of states
 end
-road = round(rand(cars,1)); % randomly assign to roads
+% road = round(rand(cars,1)); % randomly assign to roads
+road = [0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0,...
+    1, 1, 1, 0, 0, 0, 1, 0, 1].'; % new road assignments
 
 pf = L + S; % positions at final time
 vf = v0; % velocities at final time

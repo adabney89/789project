@@ -5,7 +5,7 @@
 L = 400; % control zone length [m]
 S = 30; % merging zone length [m]
 delta = 5; % minimum safe following distance [m]
-cars = 4; % # cars
+cars = 30; % # cars
 dt = 0.005; % time step [s]
 tvec = 0:dt:100; % time array
 
@@ -20,8 +20,10 @@ elseif cars == 30
     -67.8735, -74.3132, -75.7740, -79.2207, -80.0280, -81.4724, -84.9129,...
     -90.5792, -91.3376, -91.5736, -93.3993, -95.7167, -95.7507, -95.9492,...
     -96.4889, -97.0593].';
-road = [1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0 1, 1, 0, 0, 0, 1, 1, 1, 0 1,...
-    1, 0, 0, 0, 1, 0, 1, 0].';
+% road = [1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0 1, 1, 0, 0, 0, 1, 1, 1, 0 1,...
+%     1, 0, 0, 0, 1, 0, 1, 0].';
+road = [0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0,...
+    1, 1, 1, 0, 0, 0, 1, 0, 1].'; % new road assignments
 end    
 for i = 1:cars
         xc{i} = [x0(i);13.4];
@@ -77,7 +79,8 @@ for j = 1:cars
 end
 
 %% Plot
-nexttile(1)
+% nexttile(1)
+figure(1)
 hold on
 q = 1;
 qq = 1;
@@ -141,7 +144,8 @@ legend('Location','southeast')
 % title('Case 2')
 % legend
 
-nexttile(2) % Velocities
+% nexttile(2) % Velocities
+figure(2)
 hold all
 q = 1
 qq = 1
@@ -173,7 +177,8 @@ ylim([0 30])
 title('Case 2')
 % legend
 
-nexttile(3) % Controls
+% nexttile(3) % Controls
+figure(3)
 hold all
 q = 1
 qq = 1

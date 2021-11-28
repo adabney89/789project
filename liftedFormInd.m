@@ -42,7 +42,9 @@ N = timeSim/T;
 if cars == 4
     road = [1 0 1 0];
 else
-    road = round(rand(cars,1));
+%     road = round(rand(cars,1));
+    road = [0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0,...
+        1, 1, 1, 0, 0, 0, 1, 0, 1].'; % new road assignments
 end
 
 H = zeros(n*N,N*m);
