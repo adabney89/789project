@@ -9,7 +9,7 @@ cars = 30; % # cars
 dt = 0.005; % time step [s]
 tvec = 0:dt:60; % time array
 
-v0 = [13.4;13.4]; % speed before entering control zone [m/s]
+v0 = [13.4;11.2]; % speed before entering control zone [m/s]
 % x0 = -sort(rand(cars,1)*100); % random starting positions, in order
 x0 = [-3.5712, -9.7540, -12.6987, -14.1886, -15.7613, -17.1187, -27.8498,...
     -39.2227, -42.1761, -48.5376, -54.6882, -63.2359, -65.5478, -65.5741,...

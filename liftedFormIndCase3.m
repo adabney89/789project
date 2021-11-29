@@ -1,13 +1,13 @@
 clc
-clear all
-close all
+% clear all
+% close all
 %%%%
 % Per Car Continuous State Space
 %%%%
 aCar = [0 1;0 0];
 bCar = [0; 1];
 cars = 30;
-v0 = [13.4; 13.4];
+v0 = [13.4; 11.2];
 if cars == 4
     x = {[-20;13.4],[-20;13.4],[-50;13.4],[-50;13.4]};
     road = [1 0 1 0];
@@ -109,7 +109,7 @@ B2 = []
 xStar{j} = H*uStar{j}+aBar*x{j};
 end
 %%
-figure(1)
+nexttile(1)
 set(gcf,'Position',[100 100 1200 500])
 t = tiledlayout(1,3)
 t.Padding = 'compact'
